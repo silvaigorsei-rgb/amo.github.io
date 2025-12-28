@@ -2,87 +2,103 @@
 <html lang="pt-br">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Itachi Eclipse ❤️</title>
 
 <style>
 html,body{
   margin:0;
   padding:0;
-  overflow:hidden;
   background:black;
+  overflow:hidden;
   font-family:Arial, sans-serif;
   color:white;
 }
-
 canvas{
   position:fixed;
   inset:0;
-  display:block;
-  pointer-events:none;
 }
-
 #opening{
   position:fixed;
   inset:0;
-  background:black;
   display:flex;
-  align-items:center;
-  justify-content:center;
   flex-direction:column;
+  justify-content:center;
+  align-items:center;
+  background:black;
   z-index:50;
   animation:fadeOut 3s forwards;
-  animation-delay:4s;
+  animation-delay:6s;
 }
-
 #opening h1{
-  font-size:42px;
+  font-size:48px;
   color:#ff2e2e;
-  text-shadow:0 0 30px red;
-  animation:slideIn 2s ease-out;
+  letter-spacing:4px;
+  animation:openingText 3s ease-out;
 }
-
 #opening p{
-  opacity:.7;
+  opacity:.6;
 }
-
-@keyframes slideIn{
-  from{transform:translateY(40px);opacity:0}
-  to{transform:translateY(0);opacity:1}
+@keyframes openingText{
+  from{opacity:0;transform:translateY(40px)}
+  to{opacity:1;transform:translateY(0)}
 }
 @keyframes fadeOut{
   to{opacity:0;pointer-events:none}
 }
 
+#buttons{
+  position:fixed;
+  bottom:80px;
+  width:100%;
+  display:flex;
+  justify-content:center;
+  gap:40px;
+  z-index:40;
+}
+button{
+  font-size:22px;
+  padding:12px 28px;
+  border:none;
+  border-radius:30px;
+  cursor:pointer;
+}
+#sim{background:#ff2e2e;color:white}
+#nao{background:#444;color:white;position:relative}
+
+#eyes{
+  position:fixed;
+  inset:0;
+  display:flex;
+  justify-content:center;
+  align-items:center;
+  pointer-events:none;
+}
+.eye{
+  width:80px;
+  height:80px;
+  border:4px solid red;
+  border-radius:50%;
+  margin:0 40px;
+  animation:blink 5s infinite;
+}
+@keyframes blink{
+  0%,90%,100%{transform:scaleY(1)}
+  95%{transform:scaleY(0.1)}
+}
+
 #final{
   position:fixed;
   inset:0;
-  background:black;
+  background:white;
+  color:black;
   display:none;
   align-items:center;
   justify-content:center;
   flex-direction:column;
   z-index:60;
-  animation:fadeIn 3s forwards;
 }
-
-@keyframes fadeIn{
-  from{opacity:0}
-  to{opacity:1}
-}
-
-#final h1{
-  color:#ff2e2e;
-  text-shadow:0 0 25px red;
-}
-
-#beijo{
-  font-size:90px;
-  animation:pulse 1s infinite alternate;
-}
-@keyframes pulse{
-  to{transform:scale(1.3)}
-}
+#final h1{font-size:42px}
 </style>
 </head>
 <body>
@@ -92,151 +108,111 @@ canvas{
   <p>um amor além do genjutsu</p>
 </div>
 
+<div id="eyes">
+  <div class="eye"></div>
+  <div class="eye"></div>
+</div>
+
+<div id="buttons">
+  <button id="sim">SIM ❤️</button>
+  <button id="nao">NÃO 💔</button>
+</div>
+
 <div id="final">
-  <h1>💌 FINAL ETERNO 💌</h1>
-  <div id="beijo">💋</div>
-  <p>Mesmo no escuro… eu sempre escolhi você.</p>
+  <h1>💌 Amor eterno</h1>
+  <p>Mesmo no silêncio… eu sempre escolhi você.</p>
 </div>
 
 <canvas id="c"></canvas>
 
+<!-- 🎶 Música opening -->
 <audio id="music" loop>
-  <source src="https://cdn.pixabay.com/audio/2022/10/30/audio_8c3b1d9b6c.mp3">
-</audio>
-<audio id="finalMusic" loop>
   <source src="https://cdn.pixabay.com/audio/2023/03/13/audio_38c8c9efc3.mp3">
 </audio>
 
+<!-- 😈 Voz sussurrada -->
+<audio id="whisper">
+  <source src="https://cdn.pixabay.com/audio/2022/11/23/audio_96f3b2c5c8.mp3">
+</audio>
+
 <script>
+const NOME="NOME DELA";
+
 const c=document.getElementById("c"),ctx=c.getContext("2d");
 const music=document.getElementById("music");
-const finalMusic=document.getElementById("finalMusic");
+const whisper=document.getElementById("whisper");
+const sim=document.getElementById("sim");
+const nao=document.getElementById("nao");
 const final=document.getElementById("final");
 
 function resize(){c.width=innerWidth;c.height=innerHeight}
 resize();addEventListener("resize",resize);
 
 // autoplay
-addEventListener("pointerdown",()=>music.play().catch(()=>{}),{once:true});
-
-// estado
-let angle=0,ativado=false,amaterasuPower=0,cliques=0;
-let mouse={x:innerWidth/2,y:innerHeight/2};
-
-// mouse/touch
-addEventListener("pointermove",e=>{
-  mouse.x=e.clientX;
-  mouse.y=e.clientY;
-});
-
-// 🐦 corvos
-class Crow{
-  constructor(){
-    this.x=-50;
-    this.y=Math.random()*c.height;
-    this.v=2+Math.random()*2;
-    this.life=120;
-  }
-  update(){
-    this.x+=this.v;
-    this.life--;
-    ctx.fillStyle="rgba(0,0,0,.8)";
-    ctx.beginPath();
-    ctx.moveTo(this.x,this.y);
-    ctx.lineTo(this.x+20,this.y+10);
-    ctx.lineTo(this.x+40,this.y);
-    ctx.fill();
-    if(this.life<=0) explode(this.x,this.y);
-  }
-}
-
-// partículas
-const particles=[];
-function explode(x,y){
-  for(let i=0;i<15;i++){
-    particles.push({
-      x,y,
-      vx:(Math.random()-.5)*4,
-      vy:(Math.random()-.5)*4,
-      life:40
-    });
-  }
-}
-
-// partículas update
-function updateParticles(){
-  particles.forEach((p,i)=>{
-    p.x+=p.vx;
-    p.y+=p.vy;
-    p.life--;
-    ctx.fillStyle="rgba(255,0,0,.5)";
-    ctx.fillRect(p.x,p.y,2,2);
-    if(p.life<=0) particles.splice(i,1);
-  });
-}
-
-const crows=[...Array(8)].map(()=>new Crow());
-
-// 👁️ Mangekyō Itachi
-function mangekyo(){
-  const cx=c.width/2,cy=c.height/2;
-  angle+=0.02;
-  ctx.save();
-  ctx.translate(cx,cy);
-  ctx.rotate(angle);
-  ctx.strokeStyle="red";
-  ctx.lineWidth=12;
-  ctx.beginPath();
-  ctx.arc(0,0,130,0,Math.PI*2);
-  ctx.stroke();
-
-  for(let i=0;i<3;i++){
-    ctx.rotate((Math.PI*2)/3);
-    ctx.beginPath();
-    ctx.arc(0,-90,22,0,Math.PI*2);
-    ctx.fillStyle="red";
-    ctx.fill();
-  }
-  ctx.restore();
-}
-
-// 🔥 Amaterasu total
-function amaterasu(){
-  amaterasuPower=Math.min(amaterasuPower+0.01,0.9);
-  ctx.fillStyle=`rgba(0,0,0,${amaterasuPower})`;
-  ctx.fillRect(0,0,c.width,c.height);
-}
-
-// clique
 addEventListener("pointerdown",()=>{
-  cliques++;
-  if(cliques>5) ativado=true;
-  if(cliques>15){
-    music.pause();
-    finalMusic.play();
-    final.style.display="flex";
-  }
+  music.play().catch(()=>{});
+  whisper.play().catch(()=>{});
+},{once:true});
+
+// NÃO foge
+nao.addEventListener("mouseover",()=>{
+  nao.style.left=(Math.random()*200-100)+"px";
+  nao.style.top=(Math.random()*200-100)+"px";
 });
 
-// loop
-function animate(){
-  ctx.clearRect(0,0,c.width,c.height);
+// SIM ativa tudo
+sim.addEventListener("click",()=>{
+  navigator.vibrate?.([200,100,200]);
+  whisper.volume=0.3;
+  music.volume=1;
+  iniciarFinal();
+});
 
-  // fundo
-  ctx.fillStyle="rgba(0,0,0,.25)";
-  ctx.fillRect(0,0,c.width,c.height);
-
-  crows.forEach(c=>c.update());
-  updateParticles();
-
-  if(ativado){
-    mangekyo();
-    amaterasu();
+// partículas nome
+let particles=[],time=0;
+function criarNome(){
+  ctx.font="bold 140px Arial";
+  const m=ctx.measureText(NOME);
+  ctx.fillText(NOME,(c.width-m.width)/2,c.height/2);
+  const d=ctx.getImageData(0,0,c.width,c.height).data;
+  for(let i=0;i<d.length;i+=4){
+    if(d[i+3]>200 && Math.random()<0.02){
+      const x=(i/4)%c.width;
+      const y=Math.floor(i/4/c.width);
+      particles.push({x:Math.random()*c.width,y:Math.random()*c.height,tx:x,ty:y});
+    }
   }
-
-  requestAnimationFrame(animate);
+  ctx.clearRect(0,0,c.width,c.height);
 }
-animate();
+criarNome();
+
+function iniciarFinal(){
+  let fade=0;
+  function fim(){
+    ctx.fillStyle="rgba(0,0,0,.2)";
+    ctx.fillRect(0,0,c.width,c.height);
+
+    particles.forEach(p=>{
+      p.x+=(p.tx-p.x)*0.05;
+      p.y+=(p.ty-p.y)*0.05;
+      ctx.fillStyle="red";
+      ctx.fillRect(p.x,p.y,2,2);
+    });
+
+    fade+=0.005;
+    ctx.fillStyle=`rgba(255,255,255,${fade})`;
+    ctx.fillRect(0,0,c.width,c.height);
+
+    music.volume=Math.max(0,1-fade);
+
+    if(fade<1) requestAnimationFrame(fim);
+    else{
+      music.pause();
+      final.style.display="flex";
+    }
+  }
+  fim();
+}
 </script>
 </body>
 </html>
