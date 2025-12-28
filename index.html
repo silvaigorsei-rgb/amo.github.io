@@ -2,121 +2,153 @@
 <html lang="pt-br">
 <head>
 <meta charset="UTF-8">
-<title>I love you eclipse &lt;3</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Para você ❤️</title>
 <style>
-  body {
-    margin: 0;
-    overflow: hidden;
-    background: black;
-    cursor: crosshair;
-  }
-  canvas {
-    display: block;
-  }
+html,body{
+  margin:0;
+  padding:0;
+  overflow:hidden;
+  background:radial-gradient(circle at center,#1a0000,#000);
+  font-family:Arial, sans-serif;
+}
+canvas{display:block}
+#ui{
+  position:fixed;
+  top:20px;
+  width:100%;
+  text-align:center;
+  color:#ff4d6d;
+  text-shadow:0 0 15px red;
+  z-index:10;
+}
+#pedido{
+  display:none;
+  position:fixed;
+  inset:0;
+  background:rgba(0,0,0,.85);
+  color:#fff;
+  align-items:center;
+  justify-content:center;
+  flex-direction:column;
+  z-index:20;
+}
+button{
+  margin:10px;
+  padding:15px 30px;
+  font-size:18px;
+  border:none;
+  border-radius:30px;
+  cursor:pointer;
+}
+.sim{background:#ff4d6d;color:white}
+.nao{background:#444;color:white;position:absolute}
 </style>
 </head>
 <body>
 
-<canvas id="canvas"></canvas>
+<div id="ui">
+  <h2 id="texto">Colete 5 corações ❤️</h2>
+</div>
 
-<!-- 🎵 Música de fundo (pode trocar o link) -->
-<audio id="bgMusic" loop>
-  <source src="https://cdn.pixabay.com/audio/2022/10/30/audio_8c3b1d9b6c.mp3" type="audio/mpeg">
+<div id="pedido">
+  <h1 id="nome"></h1>
+  <p id="frase"></p>
+  <h2 id="mensagem"></h2>
+  <button class="sim">SIM 💖</button>
+  <button class="nao">não</button>
+</div>
+
+<canvas id="c"></canvas>
+
+<audio id="music" loop>
+  <source src="https://cdn.pixabay.com/audio/2022/10/30/audio_8c3b1d9b6c.mp3">
 </audio>
 
 <script>
-const canvas = document.getElementById("canvas");
-const ctx = canvas.getContext("2d");
-const music = document.getElementById("bgMusic");
+// ✏️ PERSONALIZA AQUI
+const NOME = "Eclipse";
+const MENSAGEM_PEDIDO = "Quer namorar comigo?";
+const FRASE_EXTRA = "Desde que você apareceu, meu mundo entrou em eclipse 💖";
 
-function resize() {
-  canvas.width = window.innerWidth;
-  canvas.height = window.innerHeight;
-}
-resize();
-window.addEventListener("resize", resize);
+const c=document.getElementById("c"),ctx=c.getContext("2d");
+const ui=document.getElementById("texto");
+const pedido=document.getElementById("pedido");
+const music=document.getElementById("music");
 
-// 🔊 Autoplay com fallback
-window.addEventListener("click", () => {
-  music.play().catch(() => {});
-}, { once: true });
+function resize(){c.width=innerWidth;c.height=innerHeight}
+resize();addEventListener("resize",resize);
 
-// 🌈 Variáveis globais
-let hue = 0;
-let pulse = 0;
-let mouse = { x: canvas.width / 2, y: canvas.height / 2 };
+addEventListener("pointerdown",()=>music.play().catch(()=>{}),{once:true});
 
-// 🖱 Mouse
-window.addEventListener("mousemove", e => {
-  mouse.x = e.clientX;
-  mouse.y = e.clientY;
-});
+let coracoes=0,hue=0;
+const hearts=[];
 
-// ❤️ Classe coração da chuva
-class Heart {
-  constructor(x = Math.random() * canvas.width, y = Math.random() * -canvas.height) {
-    this.x = x;
-    this.y = y;
-    this.size = Math.random() * 18 + 8;
-    this.speed = Math.random() * 2 + 1;
-    this.hue = Math.random() * 360;
-    this.alpha = Math.random() * 0.6 + 0.4;
+class Heart{
+  constructor(x,y){
+    this.x=x;this.y=y;
+    this.s=12+Math.random()*8;
+    this.v=1+Math.random()*2;
   }
-
-  draw() {
-    ctx.save();
-    ctx.globalAlpha = this.alpha;
-    ctx.fillStyle = `hsl(${this.hue},100%,60%)`;
+  draw(){
+    ctx.fillStyle="hsl(0,100%,60%)";
     ctx.beginPath();
-    ctx.moveTo(this.x, this.y);
-    ctx.bezierCurveTo(
-      this.x - this.size, this.y - this.size,
-      this.x - this.size * 2, this.y + this.size / 2,
-      this.x, this.y + this.size
-    );
-    ctx.bezierCurveTo(
-      this.x + this.size * 2, this.y + this.size / 2,
-      this.x + this.size, this.y - this.size,
-      this.x, this.y
-    );
+    ctx.moveTo(this.x,this.y);
+    ctx.bezierCurveTo(this.x-this.s,this.y-this.s,
+      this.x-this.s*2,this.y+this.s/2,
+      this.x,this.y+this.s);
+    ctx.bezierCurveTo(this.x+this.s*2,this.y+this.s/2,
+      this.x+this.s,this.y-this.s,
+      this.x,this.y);
     ctx.fill();
-    ctx.restore();
   }
-
-  update() {
-    this.y += this.speed;
-    this.hue += 0.6;
-    if (this.y > canvas.height + 20) {
-      this.y = -20;
-      this.x = Math.random() * canvas.width;
+  update(){
+    this.y+=this.v;
+    if(this.y>c.height+30){
+      this.y=-30;
+      this.x=Math.random()*c.width;
     }
     this.draw();
   }
 }
 
-// 🎆 Partículas neon
-class Particle {
-  constructor() {
-    this.x = mouse.x;
-    this.y = mouse.y;
-    this.vx = (Math.random() - 0.5) * 4;
-    this.vy = (Math.random() - 0.5) * 4;
-    this.life = 60;
-    this.hue = hue;
-  }
+for(let i=0;i<80;i++) hearts.push(new Heart(Math.random()*c.width,Math.random()*c.height));
 
-  update() {
-    this.x += this.vx;
-    this.y += this.vy;
-    this.life--;
-    ctx.fillStyle = `hsl(${this.hue},100%,70%)`;
-    ctx.fillRect(this.x, this.y, 2, 2);
-  }
+addEventListener("pointerdown",e=>{
+  coracoes++;
+  ui.innerText=`Corações coletados: ${coracoes} ❤️`;
+  if(coracoes>=5) mostrarPedido();
+});
+
+function mostrarPedido(){
+  pedido.style.display="flex";
+  document.getElementById("nome").innerText=NOME;
+  document.getElementById("mensagem").innerText=MENSAGEM_PEDIDO;
+  document.getElementById("frase").innerText=FRASE_EXTRA;
 }
 
-const hearts = [];
-const particles = [];
+const nao=document.querySelector(".nao");
+nao.addEventListener("mouseover",()=>{
+  nao.style.left=Math.random()*80+"%";
+  nao.style.top=Math.random()*80+"%";
+});
 
-for (let i = 0; i < 160; i++) hearts.push(new Heart());
+function eclipse(){
+  const cx=c.width/2,cy=c.height/2-100,r=70;
+  ctx.fillStyle="darkred";
+  ctx.beginPath();ctx.arc(cx,cy,r,0,Math.PI*2);ctx.fill();
+  ctx.fillStyle="#000";
+  ctx.beginPath();ctx.arc(cx+30*Math.sin(Date.now()*0.001),cy,r,0,Math.PI*2);ctx.fill();
+}
 
-
+function animate(){
+  ctx.fillStyle="rgba(0,0,0,.3)";
+  ctx.fillRect(0,0,c.width,c.height);
+  eclipse();
+  hearts.forEach(h=>h.update());
+  requestAnimationFrame(animate);
+}
+animate();
+</script>
+</body>
+</html>
