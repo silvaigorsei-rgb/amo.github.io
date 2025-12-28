@@ -2,122 +2,116 @@
 <html lang="pt-br">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Pedido Especial ❤️</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+<title>Itachi Eclipse ❤️</title>
 
 <style>
 html,body{
   margin:0;
   padding:0;
   overflow:hidden;
-  background:radial-gradient(circle at center,#1a0000,#000);
+  background:black;
   font-family:Arial, sans-serif;
+  color:white;
 }
 
 canvas{
+  position:fixed;
+  inset:0;
   display:block;
   pointer-events:none;
 }
 
-#ui{
-  position:fixed;
-  top:20px;
-  width:100%;
-  text-align:center;
-  color:#ff4d6d;
-  text-shadow:0 0 15px red;
-  z-index:10;
-}
-
-#pedido{
-  display:none;
+#opening{
   position:fixed;
   inset:0;
-  background:rgba(0,0,0,.9);
-  color:white;
+  background:black;
+  display:flex;
   align-items:center;
   justify-content:center;
   flex-direction:column;
-  z-index:20;
-  text-align:center;
+  z-index:50;
+  animation:fadeOut 3s forwards;
+  animation-delay:4s;
 }
 
-.botoes{
-  position:relative;
-  width:300px;
-  height:120px;
+#opening h1{
+  font-size:42px;
+  color:#ff2e2e;
+  text-shadow:0 0 30px red;
+  animation:slideIn 2s ease-out;
 }
 
-button{
-  padding:15px 30px;
-  font-size:18px;
-  border:none;
-  border-radius:30px;
-  cursor:pointer;
+#opening p{
+  opacity:.7;
 }
 
-.sim{
-  background:#ff4d6d;
-  color:white;
+@keyframes slideIn{
+  from{transform:translateY(40px);opacity:0}
+  to{transform:translateY(0);opacity:1}
+}
+@keyframes fadeOut{
+  to{opacity:0;pointer-events:none}
 }
 
-.nao{
-  background:#444;
-  color:white;
-  position:absolute;
+#final{
+  position:fixed;
+  inset:0;
+  background:black;
+  display:none;
+  align-items:center;
+  justify-content:center;
+  flex-direction:column;
+  z-index:60;
+  animation:fadeIn 3s forwards;
+}
+
+@keyframes fadeIn{
+  from{opacity:0}
+  to{opacity:1}
+}
+
+#final h1{
+  color:#ff2e2e;
+  text-shadow:0 0 25px red;
 }
 
 #beijo{
   font-size:90px;
-  animation:beijo 1s infinite alternate;
+  animation:pulse 1s infinite alternate;
 }
-
-@keyframes beijo{
-  from{transform:scale(1)}
+@keyframes pulse{
   to{transform:scale(1.3)}
 }
 </style>
 </head>
 <body>
 
-<div id="ui">
-  <h2 id="texto">Colete 5 corações ❤️</h2>
+<div id="opening">
+  <h1>🌑 ITACHI ECLIPSE 🌑</h1>
+  <p>um amor além do genjutsu</p>
 </div>
 
-<div id="pedido">
-  <h1 id="nome"></h1>
-  <p id="frase"></p>
-  <h2 id="mensagem"></h2>
-  <div class="botoes">
-    <button class="sim">SIM 💖</button>
-    <button class="nao">não</button>
-  </div>
+<div id="final">
+  <h1>💌 FINAL ETERNO 💌</h1>
+  <div id="beijo">💋</div>
+  <p>Mesmo no escuro… eu sempre escolhi você.</p>
 </div>
 
 <canvas id="c"></canvas>
 
-<!-- 🎵 músicas -->
 <audio id="music" loop>
   <source src="https://cdn.pixabay.com/audio/2022/10/30/audio_8c3b1d9b6c.mp3">
 </audio>
-
-<audio id="loveMusic" loop>
+<audio id="finalMusic" loop>
   <source src="https://cdn.pixabay.com/audio/2023/03/13/audio_38c8c9efc3.mp3">
 </audio>
 
 <script>
-// ✏️ PERSONALIZE AQUI
-const NOME = "Eclipse ❤️";
-const MENSAGEM_PEDIDO = "Quer namorar comigo?";
-const FRASE_EXTRA = "Desde que você apareceu, meu mundo entrou em eclipse 🌑❤️";
-
-// canvas
-const c=document.getElementById("c");
-const ctx=c.getContext("2d");
-const texto=document.getElementById("texto");
-const pedido=document.getElementById("pedido");
+const c=document.getElementById("c"),ctx=c.getContext("2d");
 const music=document.getElementById("music");
-const loveMusic=document.getElementById("loveMusic");
+const finalMusic=document.getElementById("finalMusic");
+const final=document.getElementById("final");
 
 function resize(){c.width=innerWidth;c.height=innerHeight}
 resize();addEventListener("resize",resize);
@@ -125,122 +119,121 @@ resize();addEventListener("resize",resize);
 // autoplay
 addEventListener("pointerdown",()=>music.play().catch(()=>{}),{once:true});
 
-// variáveis
-let coletados=0;
-let sharingan=false;
+// estado
+let angle=0,ativado=false,amaterasuPower=0,cliques=0;
+let mouse={x:innerWidth/2,y:innerHeight/2};
 
-// ❤️ coração
-class Heart{
-  constructor(x,y){
-    this.x=x||Math.random()*c.width;
-    this.y=y||-20;
-    this.s=12+Math.random()*10;
-    this.v=1+Math.random()*2;
-  }
-  draw(){
-    ctx.fillStyle="hsl(0,100%,60%)";
-    ctx.beginPath();
-    ctx.moveTo(this.x,this.y);
-    ctx.bezierCurveTo(this.x-this.s,this.y-this.s,
-      this.x-this.s*2,this.y+this.s/2,
-      this.x,this.y+this.s);
-    ctx.bezierCurveTo(this.x+this.s*2,this.y+this.s/2,
-      this.x+this.s,this.y-this.s,
-      this.x,this.y);
-    ctx.fill();
+// mouse/touch
+addEventListener("pointermove",e=>{
+  mouse.x=e.clientX;
+  mouse.y=e.clientY;
+});
+
+// 🐦 corvos
+class Crow{
+  constructor(){
+    this.x=-50;
+    this.y=Math.random()*c.height;
+    this.v=2+Math.random()*2;
+    this.life=120;
   }
   update(){
-    this.y+=this.v;
-    if(this.y>c.height+30){
-      this.y=-30;
-      this.x=Math.random()*c.width;
-    }
-    this.draw();
+    this.x+=this.v;
+    this.life--;
+    ctx.fillStyle="rgba(0,0,0,.8)";
+    ctx.beginPath();
+    ctx.moveTo(this.x,this.y);
+    ctx.lineTo(this.x+20,this.y+10);
+    ctx.lineTo(this.x+40,this.y);
+    ctx.fill();
+    if(this.life<=0) explode(this.x,this.y);
   }
 }
 
-const hearts=[];
-for(let i=0;i<90;i++) hearts.push(new Heart());
-
-// 💥 explosão
-function explosao(x,y){
-  for(let i=0;i<40;i++){
-    hearts.push(new Heart(
-      x+(Math.random()-0.5)*120,
-      y+(Math.random()-0.5)*120
-    ));
+// partículas
+const particles=[];
+function explode(x,y){
+  for(let i=0;i<15;i++){
+    particles.push({
+      x,y,
+      vx:(Math.random()-.5)*4,
+      vy:(Math.random()-.5)*4,
+      life:40
+    });
   }
 }
 
-// 📳 vibração
-function vibrar(){
-  if(navigator.vibrate){
-    navigator.vibrate([200,100,200,100,300]);
-  }
+// partículas update
+function updateParticles(){
+  particles.forEach((p,i)=>{
+    p.x+=p.vx;
+    p.y+=p.vy;
+    p.life--;
+    ctx.fillStyle="rgba(255,0,0,.5)";
+    ctx.fillRect(p.x,p.y,2,2);
+    if(p.life<=0) particles.splice(i,1);
+  });
 }
 
-// 🌑 eclipse
-function eclipse(){
-  const cx=c.width/2,cy=c.height/2-120,r=80;
-  ctx.fillStyle="darkred";
-  ctx.beginPath();ctx.arc(cx,cy,r,0,Math.PI*2);ctx.fill();
-  ctx.fillStyle="#000";
+const crows=[...Array(8)].map(()=>new Crow());
+
+// 👁️ Mangekyō Itachi
+function mangekyo(){
+  const cx=c.width/2,cy=c.height/2;
+  angle+=0.02;
+  ctx.save();
+  ctx.translate(cx,cy);
+  ctx.rotate(angle);
+  ctx.strokeStyle="red";
+  ctx.lineWidth=12;
   ctx.beginPath();
-  ctx.arc(cx+30*Math.sin(Date.now()*0.001),cy,r,0,Math.PI*2);
-  ctx.fill();
-}
-
-// 🩸 sharingan
-function auraSharingan(){
-  ctx.strokeStyle="rgba(255,0,0,0.4)";
-  ctx.lineWidth=18;
-  ctx.beginPath();
-  ctx.arc(c.width/2,c.height/2,160,0,Math.PI*2);
+  ctx.arc(0,0,130,0,Math.PI*2);
   ctx.stroke();
+
+  for(let i=0;i<3;i++){
+    ctx.rotate((Math.PI*2)/3);
+    ctx.beginPath();
+    ctx.arc(0,-90,22,0,Math.PI*2);
+    ctx.fillStyle="red";
+    ctx.fill();
+  }
+  ctx.restore();
 }
 
-// clique coleta
-addEventListener("pointerdown",e=>{
-  coletados++;
-  texto.innerText=`Corações: ${coletados} ❤️`;
-  if(coletados>=5){
-    pedido.style.display="flex";
-    document.getElementById("nome").innerText=NOME;
-    document.getElementById("mensagem").innerText=MENSAGEM_PEDIDO;
-    document.getElementById("frase").innerText=FRASE_EXTRA;
+// 🔥 Amaterasu total
+function amaterasu(){
+  amaterasuPower=Math.min(amaterasuPower+0.01,0.9);
+  ctx.fillStyle=`rgba(0,0,0,${amaterasuPower})`;
+  ctx.fillRect(0,0,c.width,c.height);
+}
+
+// clique
+addEventListener("pointerdown",()=>{
+  cliques++;
+  if(cliques>5) ativado=true;
+  if(cliques>15){
+    music.pause();
+    finalMusic.play();
+    final.style.display="flex";
   }
-});
-
-// botões
-const btnSim=document.querySelector(".sim");
-const btnNao=document.querySelector(".nao");
-
-btnNao.addEventListener("mouseenter",()=>{
-  btnNao.style.left=Math.random()*220+"px";
-  btnNao.style.top=Math.random()*70+"px";
-});
-
-btnSim.addEventListener("click",e=>{
-  music.pause();
-  loveMusic.play();
-  explosao(e.clientX,e.clientY);
-  vibrar();
-  sharingan=true;
-  pedido.innerHTML=`
-    <h1>💞 EU SABIA! 💞</h1>
-    <div id="beijo">💋</div>
-    <h2>Agora somos oficialmente um casal 😍</h2>
-    <p>Esse eclipse virou amor eterno 🌑❤️</p>
-  `;
 });
 
 // loop
 function animate(){
-  ctx.fillStyle="rgba(0,0,0,.3)";
+  ctx.clearRect(0,0,c.width,c.height);
+
+  // fundo
+  ctx.fillStyle="rgba(0,0,0,.25)";
   ctx.fillRect(0,0,c.width,c.height);
-  eclipse();
-  hearts.forEach(h=>h.update());
-  if(sharingan) auraSharingan();
+
+  crows.forEach(c=>c.update());
+  updateParticles();
+
+  if(ativado){
+    mangekyo();
+    amaterasu();
+  }
+
   requestAnimationFrame(animate);
 }
 animate();
