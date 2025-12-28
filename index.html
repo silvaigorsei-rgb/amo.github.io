@@ -1,122 +1,122 @@
 <!DOCTYPE html>
 <html lang="pt-br">
 <head>
-  <meta charset="UTF-8">
-  <title>Coração em Partículas</title>
-  <style>
-    body {
-      margin: 0;
-      overflow: hidden;
-      background: #000;
-      font-family: Arial, sans-serif;
-    }
-
-    #loveText {
-      position: absolute;
-      top: 50%;
-      left: 50%;
-      transform: translate(-50%, -50%);
-      color: #ff4d6d;
-      font-size: 48px;
-      text-align: center;
-      pointer-events: none;
-      animation: pulse 1.5s infinite;
-    }
-
-    @keyframes pulse {
-      0% { transform: translate(-50%, -50%) scale(1); }
-      50% { transform: translate(-50%, -50%) scale(1.1); }
-      100% { transform: translate(-50%, -50%) scale(1); }
-    }
-  </style>
+<meta charset="UTF-8">
+<title>I love you eclipse &lt;3</title>
+<style>
+  body {
+    margin: 0;
+    overflow: hidden;
+    background: black;
+    cursor: crosshair;
+  }
+  canvas {
+    display: block;
+  }
+</style>
 </head>
 <body>
 
-<div id="loveText">I love you eclipse ❤️</div>
+<canvas id="canvas"></canvas>
 
-<!-- Three.js -->
-<script src="https://cdn.jsdelivr.net/npm/three@0.158.0/build/three.min.js"></script>
+<!-- 🎵 Música de fundo (pode trocar o link) -->
+<audio id="bgMusic" loop>
+  <source src="https://cdn.pixabay.com/audio/2022/10/30/audio_8c3b1d9b6c.mp3" type="audio/mpeg">
+</audio>
 
 <script>
-  // Cena
-  const scene = new THREE.Scene();
+const canvas = document.getElementById("canvas");
+const ctx = canvas.getContext("2d");
+const music = document.getElementById("bgMusic");
 
-  // Câmera
-  const camera = new THREE.PerspectiveCamera(
-    75,
-    window.innerWidth / window.innerHeight,
-    0.1,
-    1000
-  );
-  camera.position.z = 60;
+function resize() {
+  canvas.width = window.innerWidth;
+  canvas.height = window.innerHeight;
+}
+resize();
+window.addEventListener("resize", resize);
 
-  // Renderizador
-  const renderer = new THREE.WebGLRenderer({ antialias: true });
-  renderer.setSize(window.innerWidth, window.innerHeight);
-  document.body.appendChild(renderer.domElement);
+// 🔊 Autoplay com fallback
+window.addEventListener("click", () => {
+  music.play().catch(() => {});
+}, { once: true });
 
-  // Geometria do coração
-  const geometry = new THREE.BufferGeometry();
-  const positions = [];
-  const colors = [];
-  const color = new THREE.Color();
+// 🌈 Variáveis globais
+let hue = 0;
+let pulse = 0;
+let mouse = { x: canvas.width / 2, y: canvas.height / 2 };
 
-  for (let i = 0; i < 2000; i++) {
-    const t = Math.random() * Math.PI * 2;
+// 🖱 Mouse
+window.addEventListener("mousemove", e => {
+  mouse.x = e.clientX;
+  mouse.y = e.clientY;
+});
 
-    const x = 16 * Math.pow(Math.sin(t), 3);
-    const y =
-      13 * Math.cos(t) -
-      5 * Math.cos(2 * t) -
-      2 * Math.cos(3 * t) -
-      Math.cos(4 * t);
-    const z = (Math.random() - 0.5) * 8;
-
-    positions.push(x, y, z);
-
-    color.setHSL(0.95, 1, 0.6);
-    colors.push(color.r, color.g, color.b);
+// ❤️ Classe coração da chuva
+class Heart {
+  constructor(x = Math.random() * canvas.width, y = Math.random() * -canvas.height) {
+    this.x = x;
+    this.y = y;
+    this.size = Math.random() * 18 + 8;
+    this.speed = Math.random() * 2 + 1;
+    this.hue = Math.random() * 360;
+    this.alpha = Math.random() * 0.6 + 0.4;
   }
 
-  geometry.setAttribute(
-    'position',
-    new THREE.Float32BufferAttribute(positions, 3)
-  );
-
-  geometry.setAttribute(
-    'color',
-    new THREE.Float32BufferAttribute(colors, 3)
-  );
-
-  // Material
-  const material = new THREE.PointsMaterial({
-    size: 0.6,
-    vertexColors: true,
-    transparent: true,
-    opacity: 0.9
-  });
-
-  // Partículas
-  const heart = new THREE.Points(geometry, material);
-  scene.add(heart);
-
-  // Animação
-  function animate() {
-    requestAnimationFrame(animate);
-    heart.rotation.y += 0.002;
-    heart.rotation.x += 0.001;
-    renderer.render(scene, camera);
+  draw() {
+    ctx.save();
+    ctx.globalAlpha = this.alpha;
+    ctx.fillStyle = `hsl(${this.hue},100%,60%)`;
+    ctx.beginPath();
+    ctx.moveTo(this.x, this.y);
+    ctx.bezierCurveTo(
+      this.x - this.size, this.y - this.size,
+      this.x - this.size * 2, this.y + this.size / 2,
+      this.x, this.y + this.size
+    );
+    ctx.bezierCurveTo(
+      this.x + this.size * 2, this.y + this.size / 2,
+      this.x + this.size, this.y - this.size,
+      this.x, this.y
+    );
+    ctx.fill();
+    ctx.restore();
   }
 
-  animate();
+  update() {
+    this.y += this.speed;
+    this.hue += 0.6;
+    if (this.y > canvas.height + 20) {
+      this.y = -20;
+      this.x = Math.random() * canvas.width;
+    }
+    this.draw();
+  }
+}
 
-  // Responsivo
-  window.addEventListener('resize', () => {
-    camera.aspect = window.innerWidth / window.innerHeight;
-    camera.updateProjectionMatrix();
-    renderer.setSize(window.innerWidth, window.innerHeight);
-  });
-</script>
+// 🎆 Partículas neon
+class Particle {
+  constructor() {
+    this.x = mouse.x;
+    this.y = mouse.y;
+    this.vx = (Math.random() - 0.5) * 4;
+    this.vy = (Math.random() - 0.5) * 4;
+    this.life = 60;
+    this.hue = hue;
+  }
 
-</body>
-</html>
+  update() {
+    this.x += this.vx;
+    this.y += this.vy;
+    this.life--;
+    ctx.fillStyle = `hsl(${this.hue},100%,70%)`;
+    ctx.fillRect(this.x, this.y, 2, 2);
+  }
+}
+
+const hearts = [];
+const particles = [];
+
+for (let i = 0; i < 160; i++) hearts.push(new Heart());
+
+
